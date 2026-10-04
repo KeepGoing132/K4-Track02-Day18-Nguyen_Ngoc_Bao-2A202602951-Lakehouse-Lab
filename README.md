@@ -88,6 +88,25 @@ Nếu gặp lỗi encoding khi in ký tự Unicode trên Windows, đặt `$env:P
 trước khi chạy scripts. Smoke test, 24 tests và cả 8 notebook lightweight đã được
 kiểm tra trên Windows với Python 3.11. WSL phù hợp nếu muốn dùng nguyên các lệnh `make`.
 
+Nếu PyArrow báo `WinError 3` ở đường dẫn Iceberg rất dài, giữ đường dẫn dữ liệu
+và `pytest --basetemp` ngắn. Ví dụ dùng
+`$env:LAKEHOUSE_ROOT = (Join-Path (Get-Location).Path '_lakehouse/c').Replace('\', '/')`
+và `--basetemp=./.pytest_tmp/c`.
+Đây là thư mục dữ liệu riêng trong repo, không dùng để thay đổi ngưỡng assertion.
+
+Để tạo lại bằng chứng NB1 và PDF bonus trên Windows:
+
+```powershell
+./.venv/Scripts/python.exe -m pip install -r requirements-artifacts.txt
+./.venv/Scripts/python.exe scripts/build_submission_artifacts.py --only 01_delta_basics
+./.venv/Scripts/python.exe scripts/render_bonus_brief.py
+./.venv/Scripts/python.exe submission/bonus/poc/poc_demo.py
+```
+
+Script PDF đọc `submission/bonus/ARCHITECTURE.md`, dùng font Arial của Windows,
+và xuất `submission/bonus/ARCHITECTURE.pdf`. Ảnh NB1 là bản render từ output thực
+thi, giữ đầy đủ commit JSON và chỉ xuống dòng để dễ đọc.
+
 Khoảng phiên bản Python được cấu hình là 3.10–3.14. Lần rà soát hiện tại kiểm tra
 Python 3.11 trên Windows; chưa chạy lại toàn bộ khoảng phiên bản này.
 

@@ -47,17 +47,44 @@ print("\nHistory:")
 for h in dt.history():
     print(f"  v{h['version']}  {h['operation']}  {h.get('operationMetrics', {})}")
 
+# %%
+import json
+from pathlib import Path
+
+log_dir = Path(table_path) / "_delta_log"
+commits = sorted(log_dir.glob("*.json"))
+print(f"Transaction log: {log_dir}")
+for commit in commits:
+    print(f"  {commit.name}")
+print(f"\nCommit JSON: {commits[0].name} (complete file contents)")
+commit_text = commits[0].read_text(encoding="utf-8")
+print(commit_text)
+actions = [json.loads(line) for line in commit_text.splitlines() if line.strip()]
+assert {"protocol", "metaData", "add", "commitInfo"} <= {
+    key for action in actions for key in action
+}, "Initial commit must record protocol, schema, data file and transaction"
+
+# %% [markdown]
+# Commit đầu tiên ghi protocol, schema (`metaData`), file Parquet (`add`) và
+# thông tin giao dịch (`commitInfo`). Reader dùng log để xác định file đang
+# thuộc bảng; danh sách file trên đĩa không thay thế transaction log.
+
 # %% [markdown]
 # ## 3. Schema enforcement — try to write a wrong schema
 
 # %%
 bad = pl.DataFrame({"id": [4], "name": ["dan"], "age": ["thirty"], "city": ["Hue"]})
+bad_write_blocked = False
+version_before_bad_write = dt.version()
 try:
     write_deltalake(table_path, bad.to_arrow(), mode="append")
     print("UNEXPECTED: bad write succeeded — schema enforcement broken")
 except Exception as e:
+    bad_write_blocked = True
     msg = str(e).splitlines()[0][:120]
     print(f"BLOCKED by schema enforcement (expected): {type(e).__name__}: {msg}")
+assert bad_write_blocked, "Schema enforcement did not block the incompatible age value"
+assert DeltaTable(table_path).version() == version_before_bad_write
 
 # %% [markdown]
 # ## 4. Schema evolution (opt-in)
@@ -92,8 +119,7 @@ print(tier_counts)
 # - [ ] Schema enforcement blocked the bad write
 # - [ ] schema_mode="merge" added the `tier` column
 # - [ ] DuckDB query returned 2 tier groups
-# The final schema-enforcement flag is hardcoded; inspect the actual error
-# from the bad-write cell rather than treating that PASS line as proof.
+# Schema enforcement is checked against the actual write failure and unchanged version.
 
 # %%
 from pathlib import Path as _Path  # noqa: E402
@@ -102,7 +128,7 @@ _log = sorted(_Path(table_path).glob("_delta_log/*.json"))
 _cols = DeltaTable(table_path).schema().to_arrow().names
 checks = {
     "_delta_log/ has JSON commits": len(_log) >= 2,
-    "schema enforcement blocked bad write": True,   # placeholder; inspect the bad-write output
+    "schema enforcement blocked bad write": bad_write_blocked,
     "tier column added via schema_mode=merge": "tier" in _cols,
     "duckdb sees 2 tier groups": len(tier_counts) == 2,
 }

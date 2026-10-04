@@ -8,11 +8,13 @@
 from __future__ import annotations
 
 import json
+import argparse
 import os
 import re
 import subprocess
 import sys
 import time
+import textwrap
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -132,10 +134,13 @@ def render_terminal_screenshot(
 
     # Terminal output box
     y_start = 1 - title_height - sub_height - 0.03
-    max_lines = 32
-    rendered_lines = content_lines[:max_lines]
-
-    line_spacing = 0.024
+    rendered_lines = [wrapped for line in content_lines
+                      for wrapped in (textwrap.wrap(line, width=110,
+                          replace_whitespace=False, drop_whitespace=False) or [""])]
+    required_height = 160 + 19 * len(rendered_lines)
+    if required_height > height_px:
+        fig.set_size_inches(width_px / 100, required_height / 100)
+    line_spacing = 0.79 / max(len(rendered_lines), 32)
     for i, line in enumerate(rendered_lines):
         y = y_start - (i * line_spacing)
         if y < 0.03:
@@ -173,7 +178,11 @@ def render_terminal_screenshot(
 
 
 def main():
-    py_notebooks = sorted(p for p in NB_SRC_DIR.glob("[0-9]*.py"))
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--only", choices=[p.stem for p in NB_SRC_DIR.glob("[0-9]*.py")])
+    args = parser.parse_args()
+    py_notebooks = sorted(p for p in NB_SRC_DIR.glob("[0-9]*.py")
+                          if args.only is None or p.stem == args.only)
     print(f"Found {len(py_notebooks)} notebooks to execute and package.")
 
     all_outputs = {}
@@ -181,12 +190,31 @@ def main():
         ipynb = convert_and_execute(nb)
         all_outputs[nb.stem] = extract_cell_outputs(ipynb)
 
+    if args.only:
+        if args.only != "01_delta_basics":
+            print("Notebook updated; run without --only to rebuild its overview image.")
+            return
+        nb1_lines = []
+        for block in all_outputs[args.only]:
+            if "Transaction log:" in block:
+                nb1_lines.extend(block.splitlines())
+            else:
+                nb1_lines.extend(line for line in block.splitlines()
+                                 if "BLOCKED" in line or "[PASS]" in line or "NB1 complete" in line)
+        render_terminal_screenshot("NB1: Actual Delta Commit JSON & Schema Enforcement",
+            "Executed notebook output | Complete initial commit | Wrapped for readability",
+            nb1_lines, SUB_IMG_DIR / "nb01_delta_log.png", width_px=1400)
+        return
+
     print("\nGenerating Rubric-compliant screenshots ...")
 
     # NB1 screenshot: delta_log, schema enforcement, evolution, duckdb
     nb1_lines = []
     nb1_lines.append("# Delta Table Initial Write & History Inspection")
     for block in all_outputs["01_delta_basics"]:
+        if "Transaction log:" in block:
+            nb1_lines.extend(block.splitlines())
+            continue
         for line in block.splitlines():
             if any(k in line for k in ("shape:", "v0", "v1", "v2", "BLOCKED", "tier", "[PASS]", "NB1 complete")):
                 nb1_lines.append(line)

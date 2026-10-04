@@ -4,6 +4,13 @@ Tuân thủ quy định học vụ tại [RULES.md](../docs/RULES.md) của khó
 
 ## 1. Công cụ AI sử dụng
 - **Trợ lý:** Antigravity IDE (Gemini 3.8 Flash).
+- **Rà soát và chỉnh sửa bổ sung ngày 04/10/2026:** Codex. Hỗ trợ thêm bằng
+  chứng commit JSON và kiểm tra schema enforcement thực tế trong NB1; thực thi
+  lại notebook và sinh ảnh từ output đã chạy; sửa PoC sang HMAC-SHA256 và đo
+  file pruning qua min/max; biên tập lại architecture brief, retention, dự
+  toán và nguồn tham khảo. Các số liệu PoC mới được ghi trong
+  [POC_RESULTS.md](bonus/poc/POC_RESULTS.md). Thiết kế production và các tiêu
+  chí MVP được ghi rõ là giả định/mục tiêu chưa được kiểm chứng bởi PoC local.
 
 ## 2. Phạm vi và mục đích hỗ trợ
 - **Thiết lập và gỡ lỗi môi trường (Environment Setup & Troubleshooting):**

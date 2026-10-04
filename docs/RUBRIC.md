@@ -9,8 +9,8 @@ không phải điểm phát biểu, giơ tay hay pitching.
 eight lightweight notebooks. Run the commands below from the repository root.
 The grader also checks the preserved outputs,
 screenshots and explanations against the criteria below. A successful run alone
-does not prove every criterion: NB1's final schema-enforcement flag is hardcoded,
-and NB4 does not assert every Gold requirement.
+does not prove every criterion: inspect the actual schema-enforcement error,
+commit JSON and Gold outputs; NB4 does not assert every Gold requirement.
 
 ```bash
 make setup && make smoke && make data && make data-ai && make test && make run-all

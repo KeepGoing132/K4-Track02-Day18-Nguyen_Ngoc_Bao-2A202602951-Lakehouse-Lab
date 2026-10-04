@@ -14,3 +14,7 @@
   - `scripts/verify_lite.py`: 9/9 checks PASS (offline)
   - `pytest`: 24/24 tests PASS (100%)
   - `scripts/run_all.py`: 8/8 notebooks PASS (0 failures)
+
+- **Rà soát bổ sung 04/10/2026:** NB1 đã lưu lại bằng chứng commit JSON đầy đủ;
+  PoC HMAC và file pruning đã chạy thực tế; bonus có bản PDF 6 trang.
+  Chi tiết lần kiểm tra cuối và cách tái lập: [VERIFICATION.md](VERIFICATION.md).

@@ -14,3 +14,4 @@ numpy>=1.26,<3.0         # NB7 embeddings
 jupyterlab>=4.3,<5.0
 jupytext>=1.16,<2.0
 pytest>=8.0,<10.0        # `make test` — the same gate the instructor runs
+matplotlib>=3.8,<4.0    # render submission output images
